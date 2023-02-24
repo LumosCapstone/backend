@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Backend for the Lumos Android app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LumosCapstone/backend.git"
+  },
+  "author": "Ben Woodward, Jose Castro, Liliana Valencia, Ulises Romero, Justin Thon, Anisha Jadhav, Rohit Kannaujiya, Diego Vega",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LumosCapstone/backend/issues"
+  },
+  "homepage": "https://github.com/LumosCapstone/backend#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
