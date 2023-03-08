@@ -15,8 +15,10 @@ const sql = postgres({
   password: process.env.DB_PASSWORD,
 });
 
+import { RESOURCE_TYPES, API_RETURN_MESSAGES } from './js/constants.js';
+
 app.get('/', async (req, res) => {
-  const [ {'?column?': one} ] = await sql`select 1;`;
+  const [{ '?column?': one }] = await sql`select 1;`;
   res.send(`Hello World! Here's a number from Postgres: ${one}`);
 });
 
