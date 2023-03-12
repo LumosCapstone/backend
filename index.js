@@ -22,6 +22,19 @@ app.get('/', async (req, res) => {
   res.send(`Hello World! Here's a number from Postgres: ${one}`);
 });
 
+// GET /api/item endpoint
+app.get('/api/item', (req, res) => {
+  res.send();
+});
+// GET /api/item/:id endpoint
+app.get('/api/item/:id', (req, res) => {
+  res.send();
+});
+// POST /api/item/reserve/:id endpoint
+app.post('/api/item/reserve/:id', (req, res) => {
+  res.send();
+});
+
 // Start the webserver
 app.listen(port, () => {
   console.log(`Broker is listening on port ${port}`);
