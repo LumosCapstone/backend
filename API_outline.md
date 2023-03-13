@@ -2,13 +2,11 @@
 
 ## GET /api/item?lat=float&long=float&max_distance=unsigned_int
 
-Gets a list of items within a certain `max_distance` of `lat` and `long`\*
+Gets a list of items within a certain `max_distance` of `lat` and `long`
 
 - `lat` (float) user's latitude
 - `long` (float) user's longitude
 - `max_distance` (unsigned integer) list items no more than this distance (in miles) away from the user
-
-\* I'm assuming PostGIS works with lat/longitude to do geospatial stuff, but I haven't done research on that yet, so these may change.
 
 ### Example response (subject to change as we develop DB schema)
 
@@ -56,11 +54,12 @@ Gets detailed information about an item. Returns an error if the item has been r
 }
 ```
 
-## POST /api/item/reserve/:id
+## POST /api/item/reserve/:id?user_id=int
 
 Attempts to reserve an item for the user. May return an
 
 - `:id` the item's ID
+- `user_id` the user ID of the reserver
 
 ### Example response (subject to change as we develop DB schema)
 
