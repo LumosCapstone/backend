@@ -85,7 +85,11 @@ app.get('/api/item/:id', async (req, res) => {
 });
 
 // POST /api/item/reserve/:id endpoint
-app.post('/api/item/reserve/:id', (req, res) => {
+app.post('/api/item/reserve/:id', async (req, res) => {
+
+  // WIP
+  const result = await sql`update resources set `;
+
   res.send();
 });
 
