@@ -21,8 +21,8 @@ const metersPerMile = 1609.34;
 
 // Gives the distance in meters between the given PostGIS point and selected resources.
 // Example of point_sql: `POINT(-121.2352251 85.22345752)`
-const distance_sql = (point_sql) => `ST_DistanceSpheroid(
-  'SRID=4326;${point_sql}', 
+const distance_sql = (pointSql) => sql`ST_DistanceSpheroid(
+  ST_GeomFromText(${pointSql}, 4326), 
   resources.location, 
   'SPHEROID["WGS 84",6378137,298.257223563]'
 ) as distance_meters`;
@@ -50,24 +50,23 @@ app.get('/api/item', async (req, res) => {
     });
   }
 
-  // TODO: join users
+  const point = `POINT(${long} ${lat})`;
   const resources = await sql`
-    select id, type, name, quantity, ST_AsText(location) as location_point, ${distance_sql(`POINT(${long} ${lat})`)}
-    from resources
-    where ST_DWithin(
-      'SRID=4326;POINT(${long} ${lat})'::geography,
+    select resources.id, type, resources.name, quantity, ST_AsText(location) as location_point, users.name as owner_name, users.id as owner_id, ST_DistanceSpheroid(
+        ST_GeomFromText(${point}, 4326), 
+        resources.location, 
+        'SPHEROID["WGS 84",6378137,298.257223563]'
+      ) as distance_meters
+    from resources left outer join users on users.id in (owned_by, reserved_by) where ST_DWithin(
+      ST_GeomFromText(${point}, 4326),
       resources.location::geography,
       ${max_distance * metersPerMile}
-    );`;
+    )
+    `.catch(reason => console.error(reason));
 
   // const images = await sql`(fetch one image of each resource)`;
 
-  // Loop through resources:
-  //   get the distance between (lat, long), and the resources'
-  //   `location_point` for the `distance` field in the response
-
-
-  res.send();
+  res.send(resources);
 });
 
 // GET /api/item/:id endpoint
