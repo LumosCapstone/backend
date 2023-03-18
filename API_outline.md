@@ -16,6 +16,7 @@ Gets a list of items within a certain `max_distance` of `lat` and `long`
     "id": 123,
     "name": "Freezer space",
     "type": "fridge_space",
+    "quantity": 2,
     "seller": "Bob Smith",
     "distance": "< 5 miles",
     "image": "url or image data"
