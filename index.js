@@ -98,8 +98,7 @@ app.get('/api/item/:id', async (req, res) => {
   try {
     const [resource] = await sql`
       select resources.id, resources.name, type, quantity, users.name as seller, email as seller_email, phone_number as seller_phone
-      from resources left outer join users on users.id = owned_by where resources.id = ${id};
-      `.catch(reason => console.error(reason));
+      from resources left outer join users on users.id = owned_by where resources.id = ${id};`;
 
     if (!resource) {
       return res.status(404).send({
