@@ -79,33 +79,38 @@ app.get('/api/item', async (req, res) => {
 
 // GET /api/item/:id endpoint
 app.get('/api/item/:id', async (req, res) => {
-  const id = req.params.id;
-  if (typeof id != 'number') {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
     return res.status(400).send({
       error: "BAD_REQUEST",
       message: "please provide a numeric item ID"
     });
   }
 
-  // TODO: join users and images
-  const resources = await sql`
-    select id, type, name, quantity, ST_AsText(location) as location_point, ${distance_sql(`location`)}
-    from resources
-    where id = ${id};`;
+  const [resource] = await sql`
+    select resources.id, resources.name, type, quantity, users.name as seller, email as seller_email, phone_number as seller_phone
+    from resources left outer join users on users.id = owned_by where resources.id = ${id};
+    `.catch(reason => console.error(reason));
 
-  // Get the distance between (lat, long), and the resource's
-  // `location_point` for the `distance` field in the response
+  if (!resource) {
+    return res.status(404).send({
+      error: "ITEM_UNAVAILABLE",
+      id
+    });
+  }
 
-  res.send();
+  const images = await sql`select content from images where resource_id = ${id};`;
+
+  res.send({ ...resource, images: images.map(i => i.content) });
 });
 
 // POST /api/item/reserve/:id endpoint
 app.post('/api/item/reserve/:id', async (req, res) => {
 
-  const { id } = req.params.id;
-  const { user_id } = req.query.user_id;
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
 
-  if (typeof user_id != 'number' || typeof id != 'number') {
+  if (isNaN(id) || isNaN(user_id)) {
     return res.status(400).send({
       error: "BAD_REQUEST",
       message: "please provide a numeric user ID and item ID"
@@ -113,9 +118,10 @@ app.post('/api/item/reserve/:id', async (req, res) => {
   }
 
   // Get the item, but only if it currently belongs to someone
-  const items = await sql`select belongs_to
+  const items = await sql`
+    select owned_by
     from resources
-    where id = ${id} and belongs_to IS NOT NULL;`;
+    where id = ${id} and reserved_by IS NOT NULL;`;
 
   // If we get rows back, the item is already reserved
   if (items.length > 0) {
@@ -126,7 +132,7 @@ app.post('/api/item/reserve/:id', async (req, res) => {
   }
 
   const result = await sql`update resources 
-    set belongs_to = ${user_id} where id = ${id}`;
+    set reserved_by = ${user_id} where id = ${id}`;
 
   res.status(200).send({
     ok: API_RETURN_MESSAGES.RESERVE_SUCCESS,

@@ -41,8 +41,7 @@ Gets detailed information about an item. Returns an error if the item has been r
   "seller": "Bob Smith",
   "seller_email": "bob@gmail.com",
   "seller_phone": "+1 (123) 123-1234",
-  "images": ["url or image data 1", "url or image data 2"],
-  "distance": "< 5 miles"
+  "images": ["url or image data 1", "url or image data 2"]
 }
 ```
 
