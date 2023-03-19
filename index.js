@@ -51,6 +51,7 @@ app.get('/api/item', async (req, res) => {
     });
   }
 
+  // max distance needs to be a positive number
   if (max_distance < 1) {
     return res.status(400).send({
       error: "BAD_REQUEST",
@@ -59,10 +60,15 @@ app.get('/api/item', async (req, res) => {
   }
 
   try {
+    // Select resources, join owner and one image per resource
     const point = `POINT(${long} ${lat})`;
     const resources = await sql`
-      select distinct on (resources.id) resources.id, resources.name, type, quantity, users.name as seller, content as image, ${distance_sql(point)}
-      from resources left outer join users on users.id = owned_by left outer join images on resource_id = resources.id where ST_DWithin(
+      select distinct on (resources.id)
+        resources.id, resources.name, type, quantity, users.name as seller, content as image, ${distance_sql(point)}
+      from resources 
+      left outer join users on users.id = owned_by 
+      left outer join images on resource_id = resources.id 
+      where ST_DWithin(
         ST_GeomFromText(${point}, 4326),
         resources.location::geography,
         ${max_distance * metersPerMile}
@@ -87,6 +93,7 @@ app.get('/api/item', async (req, res) => {
 
 // GET /api/item/:id endpoint
 app.get('/api/item/:id', async (req, res) => {
+  // Parse item ID
   const id = parseInt(req.params.id);
   if (isNaN(id)) {
     return res.status(400).send({
@@ -96,10 +103,12 @@ app.get('/api/item/:id', async (req, res) => {
   }
 
   try {
+    // Get the resource
     const [resource] = await sql`
       select resources.id, resources.name, type, quantity, users.name as seller, email as seller_email, phone_number as seller_phone
       from resources left outer join users on users.id = owned_by where resources.id = ${id};`;
 
+    // If undefined, this item doesn't exist
     if (!resource) {
       return res.status(404).send({
         error: "ITEM_UNAVAILABLE",
@@ -107,6 +116,7 @@ app.get('/api/item/:id', async (req, res) => {
       });
     }
 
+    // If we got the resource, select all of its images (can we improve this be one query?)
     const images = await sql`select content from images where resource_id = ${id};`;
 
     res.send({ ...resource, images: images.map(i => i.content) });
@@ -123,9 +133,9 @@ app.get('/api/item/:id', async (req, res) => {
 // POST /api/item/reserve/:id endpoint
 app.post('/api/item/reserve/:id', async (req, res) => {
 
+  // Parse query and URL parameters
   const id = parseInt(req.params.id);
   const user_id = parseInt(req.query.user_id);
-
   if (isNaN(id) || isNaN(user_id)) {
     return res.status(400).send({
       error: "BAD_REQUEST",
@@ -148,6 +158,7 @@ app.post('/api/item/reserve/:id', async (req, res) => {
       });
     }
 
+    // If we got no rows back, update the item to be reserved by `user_id`
     const result = await sql`update resources 
       set reserved_by = ${user_id} where id = ${id}`;
 
