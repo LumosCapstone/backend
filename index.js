@@ -58,23 +58,31 @@ app.get('/api/item', async (req, res) => {
     });
   }
 
-  const point = `POINT(${long} ${lat})`;
-  const resources = await sql`
-    select distinct on (resources.id) resources.id, resources.name, type, quantity, users.name as seller, content as image, ${distance_sql(point)}
-    from resources left outer join users on users.id = owned_by left outer join images on resource_id = resources.id where ST_DWithin(
-      ST_GeomFromText(${point}, 4326),
-      resources.location::geography,
-      ${max_distance * metersPerMile}
-    )
-    `.catch(reason => console.error(reason));
+  try {
+    const point = `POINT(${long} ${lat})`;
+    const resources = await sql`
+      select distinct on (resources.id) resources.id, resources.name, type, quantity, users.name as seller, content as image, ${distance_sql(point)}
+      from resources left outer join users on users.id = owned_by left outer join images on resource_id = resources.id where ST_DWithin(
+        ST_GeomFromText(${point}, 4326),
+        resources.location::geography,
+        ${max_distance * metersPerMile}
+      )`;
 
-  // Convert the resources' exact distance in meters to an approximation in miles
-  for (let resource of resources) {
-    resource.distance = metersToDistanceApproximation(resource.distance_meters);
-    delete resource.distance_meters;
+    // Convert the resources' exact distance in meters to an approximation in miles
+    for (let resource of resources) {
+      resource.distance = metersToDistanceApproximation(resource.distance_meters);
+      delete resource.distance_meters;
+    }
+
+    res.send(resources);
+  } catch (error) {
+    console.error(error);
+
+    res.send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
   }
-
-  res.send(resources);
 });
 
 // GET /api/item/:id endpoint
@@ -87,21 +95,30 @@ app.get('/api/item/:id', async (req, res) => {
     });
   }
 
-  const [resource] = await sql`
-    select resources.id, resources.name, type, quantity, users.name as seller, email as seller_email, phone_number as seller_phone
-    from resources left outer join users on users.id = owned_by where resources.id = ${id};
-    `.catch(reason => console.error(reason));
+  try {
+    const [resource] = await sql`
+      select resources.id, resources.name, type, quantity, users.name as seller, email as seller_email, phone_number as seller_phone
+      from resources left outer join users on users.id = owned_by where resources.id = ${id};
+      `.catch(reason => console.error(reason));
 
-  if (!resource) {
-    return res.status(404).send({
-      error: "ITEM_UNAVAILABLE",
-      id
+    if (!resource) {
+      return res.status(404).send({
+        error: "ITEM_UNAVAILABLE",
+        id
+      });
+    }
+
+    const images = await sql`select content from images where resource_id = ${id};`;
+
+    res.send({ ...resource, images: images.map(i => i.content) });
+  } catch (error) {
+    console.error(error);
+
+    res.send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
     });
   }
-
-  const images = await sql`select content from images where resource_id = ${id};`;
-
-  res.send({ ...resource, images: images.map(i => i.content) });
 });
 
 // POST /api/item/reserve/:id endpoint
@@ -117,27 +134,36 @@ app.post('/api/item/reserve/:id', async (req, res) => {
     });
   }
 
-  // Get the item, but only if it currently belongs to someone
-  const items = await sql`
-    select owned_by
-    from resources
-    where id = ${id} and reserved_by IS NOT NULL;`;
+  try {
+    // Get the item, but only if it currently belongs to someone
+    const items = await sql`
+      select owned_by
+      from resources
+      where id = ${id} and reserved_by IS NOT NULL;`;
 
-  // If we get rows back, the item is already reserved
-  if (items.length > 0) {
-    return res.status(409).send({
-      error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+    // If we get rows back, the item is already reserved
+    if (items.length > 0) {
+      return res.status(409).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        id
+      });
+    }
+
+    const result = await sql`update resources 
+      set reserved_by = ${user_id} where id = ${id}`;
+
+    res.status(200).send({
+      ok: API_RETURN_MESSAGES.RESERVE_SUCCESS,
       id
     });
+  } catch (error) {
+    console.error(error);
+
+    res.send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
   }
-
-  const result = await sql`update resources 
-    set reserved_by = ${user_id} where id = ${id}`;
-
-  res.status(200).send({
-    ok: API_RETURN_MESSAGES.RESERVE_SUCCESS,
-    id
-  });
 });
 
 // Start the webserver
