@@ -15,7 +15,7 @@ const sql = postgres({
   password: process.env.DB_PASSWORD,
 });
 
-import { RESOURCE_TYPES, API_RETURN_MESSAGES } from './js/constants.js';
+import { RESOURCE_TYPES, API_RETURN_MESSAGES } from './api/constants.js';
 
 const metersPerMile = 1609.34;
 const metersToDistanceApproximation = meters => {
@@ -174,6 +174,20 @@ app.post('/api/item/reserve/:id', async (req, res) => {
       message: "Internal Server Error"
     });
   }
+});
+
+// POST /api/item/confirm-reservation/:id endpoint
+app.post('/api/item/confirm-reservation/:id', async (req, res) => {
+  const { id } = req.params;
+  const { user_id } = req.query;
+  res.send();
+});
+
+// POST /api/item/cancel-reservation/:id endpoint
+app.post('/api/item/cancel-reservation/:id', async (req, res) => {
+  const { id } = req.params;
+  const { user_id, relist } = req.query;
+  res.send();
 });
 
 // Start the webserver
