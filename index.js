@@ -163,7 +163,7 @@ app.post('/api/item/reserve/:id', async (req, res) => {
     const [owner] = await sql`
       select name as seller, email as seller_email, phone_number as seller_phone 
       from users
-      where user_id = ${user_id};
+      where id = ${user_id};
     `;
 
     if (!owner) {
@@ -198,8 +198,8 @@ app.post('/api/item/reserve/:id', async (req, res) => {
 
 // POST /api/item/confirm-reservation/:id endpoint
 app.post('/api/item/confirm-reservation/:id', async (req, res) => {
-  const { id } = req.params;
-  const { user_id } = req.query;
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
 
   if (isNaN(id) || isNaN(user_id)) {
     return res.status(400).send({
@@ -233,12 +233,10 @@ app.post('/api/item/confirm-reservation/:id', async (req, res) => {
       });
     }
 
-    const update_result = await sql`
+    const _update_result = await sql`
       update resources 
       set reservation_status = ${ITEM.CONFIRMED} where id = ${id};
     `;
-    console.log("update result:");
-    console.log(update_result);
 
     res.status(200).send({
       ok: API_RETURN_MESSAGES.RESERVE_CONFIRMATION_SUCCESS,
@@ -256,8 +254,9 @@ app.post('/api/item/confirm-reservation/:id', async (req, res) => {
 
 // POST /api/item/cancel-reservation/:id endpoint
 app.post('/api/item/cancel-reservation/:id', async (req, res) => {
-  const { id } = req.params;
-  const { user_id, relist } = req.query;
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
+  let relist = req.query.relist;
 
   if (isNaN(id) || isNaN(user_id)) {
     return res.status(400).send({
