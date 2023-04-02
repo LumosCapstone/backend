@@ -40,10 +40,10 @@
                         <mxPoint x="560" y="480" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="2" value="The reservation_status column represents the borrowed state of the resource.&lt;br&gt;0 = listed in the app for reservation&lt;br&gt;1 = reserved by `reserved_by`, waiting for confirmation from resource owner&lt;br&gt;2 = confirmed to be borrowed and in use by `reserved_by`" style="shape=note;size=20;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="2" value="The reservation_status column represents the borrowed state of the resource.&lt;br&gt;0 = listed in the app for reservation&lt;br&gt;1 = reserved by `reserved_by`, waiting for confirmation from resource owner&lt;br&gt;2 = confirmed to be borrowed and in use by `reserved_by`&lt;br&gt;3 = not currently borrowed, and not listed in the app" style="shape=note;size=20;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="225" y="560" width="240" height="170" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.005;entryY=0.838;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="2" target="BZzWXipZtvT7cpwbV_F--4">
+                <mxCell id="3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.005;entryY=0.838;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="2" target="BZzWXipZtvT7cpwbV_F--4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="650" y="570" as="sourcePoint"/>
                         <mxPoint x="650" y="525" as="targetPoint"/>
