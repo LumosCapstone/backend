@@ -35,3 +35,7 @@ create index resources_gix on resources using GIST (location);
 
 -- Example of selecting within 25km
 -- select ST_AsText(location), type from resources where ST_DWithin('SRID=4326;POINT(-121.79796783646778 36.65301564458816)'::geography, resources.location::geography, 25000);
+
+-- Example of selecting distances between 2 points on a spheroid (approximation of Earth's shape)
+-- select id, ST_DistanceSpheroid('SRID=4326;POINT(-121.78796783646778 36.65301564458816)', resources.location, 'SPHEROID["WGS 84",6378137,298.257223563]') from resources;
+-- Source: https://blog.programster.org/using-postgis-to-calculate-distance-between-two-points
