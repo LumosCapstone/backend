@@ -35,6 +35,27 @@ const distance_sql = (point) => sql`ST_DistanceSpheroid(
   'SPHEROID["WGS 84",6378137,298.257223563]'
 ) as distance_meters`;
 
+// Returns true if a PostGIS point and selected resources geography are within a given distance.  
+const resources_within_range_sql = (point, max_distance, type) => {
+  let resource_rows;
+  
+  if (type) {
+    resource_rows = sql`ST_DWithin(
+      ST_GeomFromText(${point}, 4326),
+      resources.location::geography,
+      ${max_distance * metersPerMile})
+      and type = ${type};`
+  } 
+  else {
+    resource_rows = sql`ST_DWithin(
+      ST_GeomFromText(${point}, 4326),
+      resources.location::geography,
+      ${max_distance * metersPerMile});`
+  }
+    
+  return resource_rows;
+};
+
 app.get('/', async (req, res) => {
   const [{ '?column?': one }] = await sql`select 1;`;
   res.send(`Hello World! Here's a number from Postgres: ${one}`);
@@ -43,7 +64,8 @@ app.get('/', async (req, res) => {
 // GET /api/item endpoint
 app.get('/api/item', async (req, res) => {
   // Get query parameters
-  const { lat, long, max_distance } = req.query;
+  const { type, lat, long, max_distance } = req.query;
+  
   if (!lat || !long || !max_distance) {
     return res.status(400).send({
       error: "BAD_REQUEST",
@@ -62,29 +84,34 @@ app.get('/api/item', async (req, res) => {
   try {
     // Select resources, join owner and one image per resource
     const point = `POINT(${long} ${lat})`;
-    const resources = await sql`
-      select distinct on (resources.id)
-        resources.id, resources.name, type, quantity, users.name as seller, content as image, ${distance_sql(point)}
-      from resources 
-      left outer join users on users.id = owned_by 
-      left outer join images on resource_id = resources.id 
-      where ST_DWithin(
-        ST_GeomFromText(${point}, 4326),
-        resources.location::geography,
-        ${max_distance * metersPerMile}
-      )`;
 
+    const resources = await sql`
+     select distinct on (resources.id)
+       resources.id, resources.name, type, quantity, users.name as seller, content as image, 
+       ${distance_sql(point)}
+     from resources 
+     left outer join users on users.id = owned_by 
+     left outer join images on resource_id = resources.id 
+     where ${resources_within_range_sql(point, max_distance, type)}`;
+    
+     // If rows are empty, items do not exist. 
+     if (resources.length < 1) {
+        return res.status(404).send({
+          error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        });
+     }
+    
     // Convert the resources' exact distance in meters to an approximation in miles
     for (let resource of resources) {
       resource.distance = metersToDistanceApproximation(resource.distance_meters);
       delete resource.distance_meters;
     }
 
-    res.send(resources);
+    res.status(200).send(resources);
   } catch (error) {
     console.error(error);
 
-    res.send({
+    res.status(500).send({
       error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
       message: "Internal Server Error"
     });
