@@ -268,7 +268,7 @@ app.post('/api/item/cancel-reservation/:id', async (req, res) => {
   try {
     // Select the resource whose reservation should be cancelled
     const [resource] = await sql`
-      select id, owned_by, reservation_status
+      select id, owned_by, reserved_by, reservation_status
       from resources
       where id = ${id};
     `;
@@ -283,7 +283,7 @@ app.post('/api/item/cancel-reservation/:id', async (req, res) => {
         error: API_RETURN_MESSAGES.UNAUTHORIZED,
         message: "You are not authorized to perform this action."
       });
-    } else if (resource.reservation_status != ITEM.RESERVED) { // The resource must have a reservation to cancel
+    } else if (resource.reservation_status != ITEM.RESERVED && resource.reservation_status != ITEM.CONFIRMED) { // The resource must have an unconfirmed reservation to cancel
       return res.status(403).send({
         error: API_RETURN_MESSAGES.NO_RESERVATION,
         message: "No reservation to cancel."
@@ -295,7 +295,7 @@ app.post('/api/item/cancel-reservation/:id', async (req, res) => {
 
     const _update_result = await sql`
       update resources 
-      set reservation_status = ${relist ? ITEM.LISTED : ITEM.UNLISTED} where id = ${id};
+      set reservation_status = ${relist ? ITEM.LISTED : ITEM.UNLISTED}, reserved_by = NULL where id = ${id};
     `;
 
     res.status(200).send({
