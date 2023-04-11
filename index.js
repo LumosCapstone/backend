@@ -29,7 +29,7 @@ const metersToDistanceApproximation = meters => {
 
 // Gives the distance in meters between the given PostGIS point and selected resources.
 // Example of point: `POINT(-121.2352251 85.22345752)`
-const distance_sql = (point) => sql`ST_DistanceSpheroid(
+const resources_distance_sql = (point) => sql`ST_DistanceSpheroid(
   ST_GeomFromText(${point}, 4326), 
   resources.location, 
   'SPHEROID["WGS 84",6378137,298.257223563]'
@@ -88,18 +88,18 @@ app.get('/api/item', async (req, res) => {
     const resources = await sql`
      select distinct on (resources.id)
        resources.id, resources.name, type, quantity, users.name as seller, content as image, 
-       ${distance_sql(point)}
+       ${resources_distance_sql(point)}
      from resources 
      left outer join users on users.id = owned_by 
      left outer join images on resource_id = resources.id 
      where ${resources_within_range_sql(point, max_distance, type)}`;
     
-     // If rows are empty, items do not exist. 
-     if (resources.length < 1) {
-        return res.status(404).send({
-          error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
-        });
-     }
+    // If rows are empty, items do not exist. 
+    if (resources.length < 1) {
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+      });
+    }
     
     // Convert the resources' exact distance in meters to an approximation in miles
     for (let resource of resources) {
