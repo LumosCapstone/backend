@@ -15,7 +15,7 @@ const sql = postgres({
   password: process.env.DB_PASSWORD,
 });
 
-import { RESOURCE_TYPES, API_RETURN_MESSAGES } from './js/constants.js';
+import { RESOURCE_TYPES, API_RETURN_MESSAGES, ITEM } from './api/constants.js';
 
 const metersPerMile = 1609.34;
 const metersToDistanceApproximation = meters => {
@@ -138,7 +138,7 @@ app.get('/api/item/:id', async (req, res) => {
     // If undefined, this item doesn't exist
     if (!resource) {
       return res.status(404).send({
-        error: "ITEM_UNAVAILABLE",
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
         id
       });
     }
@@ -171,11 +171,12 @@ app.post('/api/item/reserve/:id', async (req, res) => {
   }
 
   try {
-    // Get the item, but only if it currently belongs to someone
+    // Get the item, but only if it is currently reserved
     const items = await sql`
       select owned_by
       from resources
-      where id = ${id} and reserved_by IS NOT NULL;`;
+      where id = ${id} and reservation_status in (${ITEM.RESERVED}, ${ITEM.CONFIRMED});
+    `;
 
     // If we get rows back, the item is already reserved
     if (items.length > 0) {
@@ -185,18 +186,153 @@ app.post('/api/item/reserve/:id', async (req, res) => {
       });
     }
 
+    // TODO: Could probably reduce this from 3 -> 2 queries by joining seller info on the resources select above.
+    const [owner] = await sql`
+      select name as seller, email as seller_email, phone_number as seller_phone 
+      from users
+      where id = ${user_id};
+    `;
+
+    if (!owner) {
+      console.error(`Tried to reserve resource with unknown owner/user_id: ${user_id}`);
+
+      return res.status(500).send({
+        error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+        message: "Internal Server Error"
+      });
+    }
+
     // If we got no rows back, update the item to be reserved by `user_id`
-    const result = await sql`update resources 
-      set reserved_by = ${user_id} where id = ${id}`;
+    const _ = await sql`update resources 
+      set reserved_by = ${user_id}, reservation_status = ${ITEM.RESERVED} where id = ${id}`;
 
     res.status(200).send({
       ok: API_RETURN_MESSAGES.RESERVE_SUCCESS,
+      seller: owner.seller,
+      seller_email: owner.seller_email,
+      seller_phone: owner.seller_phone,
       id
     });
   } catch (error) {
     console.error(error);
 
-    res.send({
+    res.status(500).send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+// POST /api/item/confirm-reservation/:id endpoint
+app.post('/api/item/confirm-reservation/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
+
+  if (isNaN(id) || isNaN(user_id)) {
+    return res.status(400).send({
+      error: "BAD_REQUEST",
+      message: "please provide a numeric user ID and item ID"
+    });
+  }
+
+  try {
+    // Select the resource whose reservation should be confirmed
+    const [resource] = await sql`
+      select id, owned_by, reservation_status
+      from resources
+      where id = ${id};
+    `;
+
+    if (!resource) { // No resource found
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        id
+      });
+    } else if (resource.owned_by != user_id) { // The user confirming the reservation has to be the owner
+      return res.status(401).send({
+        error: API_RETURN_MESSAGES.UNAUTHORIZED,
+        message: "You are not authorized to perform this action."
+      });
+    } else if (resource.reservation_status != ITEM.RESERVED) { // The resource must have a reservation to confirm
+      return res.status(403).send({
+        error: API_RETURN_MESSAGES.NO_RESERVATION,
+        message: "No reservation to confirm."
+      });
+    }
+
+    const _update_result = await sql`
+      update resources 
+      set reservation_status = ${ITEM.CONFIRMED} where id = ${id};
+    `;
+
+    res.status(200).send({
+      ok: API_RETURN_MESSAGES.RESERVE_CONFIRMATION_SUCCESS,
+      id
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+// POST /api/item/cancel-reservation/:id endpoint
+app.post('/api/item/cancel-reservation/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
+  let relist = req.query.relist;
+
+  if (isNaN(id) || isNaN(user_id)) {
+    return res.status(400).send({
+      error: "BAD_REQUEST",
+      message: "please provide a numeric user ID and item ID"
+    });
+  }
+
+  try {
+    // Select the resource whose reservation should be cancelled
+    const [resource] = await sql`
+      select id, owned_by, reserved_by, reservation_status
+      from resources
+      where id = ${id};
+    `;
+
+    if (!resource) { // No resource found
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        id
+      });
+    } else if (![resource.owned_by, resource.reserved_by].includes(user_id)) { // The user cancelling the reservation has to be the owner or the reserver
+      return res.status(401).send({
+        error: API_RETURN_MESSAGES.UNAUTHORIZED,
+        message: "You are not authorized to perform this action."
+      });
+    } else if (resource.reservation_status != ITEM.RESERVED && resource.reservation_status != ITEM.CONFIRMED) { // The resource must have an unconfirmed reservation to cancel
+      return res.status(403).send({
+        error: API_RETURN_MESSAGES.NO_RESERVATION,
+        message: "No reservation to cancel."
+      });
+    }
+
+    // `relist` query param defaults to false
+    if (relist == undefined) relist = false;
+
+    const _update_result = await sql`
+      update resources 
+      set reservation_status = ${relist ? ITEM.LISTED : ITEM.UNLISTED}, reserved_by = NULL where id = ${id};
+    `;
+
+    res.status(200).send({
+      ok: API_RETURN_MESSAGES.RESERVE_CANCELLATION_SUCCESS,
+      id
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
       error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
       message: "Internal Server Error"
     });
