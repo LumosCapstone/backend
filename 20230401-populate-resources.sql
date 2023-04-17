@@ -9,14 +9,15 @@ insert into users (name, email, phone_number, password_hash) values
 ('Rohit Kannaujiya', 'rkannau@csumb.edu', '8315432167', 'Roh6789');
 
 insert into resources (location, type, name, quantity, owned_by) values 
-('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'Fridge_space', 'Jose', 1, 1),
-('SRID=4326;POINT(-121.82342 36.63958)', 'Lanterns', 'Ben', 3, 2),
-('SRID=4326;POINT(-121.82745 36.61942)', 'Generators', 'Diego', 2, 3),
-('SRID=4326;POINT(-121.83360 36.60986)', 'Fridge_Space', 'Liliana', 2, 4),
-('SRID=4326;POINT(-121.82408 36.61325)', 'Wifi', 'Rohit', 1, 5),
-('SRID=4326;POINT(-121.82342 36.63958)', 'Candels', 'Ben', 5, 2),
-('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'Batteries', 'Jose', 10, 1),
-('SRID=4326;POINT(-121.82745 36.61942)', 'First aid kit', 'Diego', 3, 3);
+('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'Fridge_space', 'Freezer', 1, 1),
+('SRID=4326;POINT(-121.82342 36.63958)', 'Lanterns', 'Gas Coleman lantern', 3, 2),
+('SRID=4326;POINT(-121.82745 36.61942)', 'Generators', '3500 Watt generator', 2, 3),
+('SRID=4326;POINT(-121.83360 36.60986)', 'Fridge_Space', 'Refridgerator', 2, 4),
+('SRID=4326;POINT(-121.82408 36.61325)', 'Wifi', 'AT&T 5GHZ', 1, 5),
+('SRID=4326;POINT(-121.82342 36.63958)', 'Candels', 'Beeswax Candle', 5, 2),
+('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'Batteries', 'Triple & double A', 10, 1),
+('SRID=4326;POINT(-121.82745 36.61942)', 'First aid kit', 'Medical emergancy kit', 3, 3);
+
 
 insert into images (id, content, resource_id) values 
 (1, 'https://static.vecteezy.com/system/resources/previews/000/356/450/original/fridge-vector-icon.jpg', 1),
