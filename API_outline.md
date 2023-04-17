@@ -1,12 +1,13 @@
 # Lumos Broker API Outline
 
-## GET /api/item?lat=float&long=float&max_distance=unsigned_int
+## GET /api/item?lat=float&long=float&max_distance=unsigned_int&type=string
 
-Gets a list of items within a certain `max_distance` of `lat` and `long`
+Gets a list of `type` items within `max_distance` of (`lat`, `long`)
 
 - `lat` (float) user's latitude
 - `long` (float) user's longitude
 - `max_distance` (unsigned integer) list items no more than this distance (in miles) away from the user
+- `type` (string) the type of resource to filter by
 
 ### Example response (subject to change as we develop DB schema)
 
@@ -57,7 +58,7 @@ Gets detailed information about an item. Returns an error if the item has been r
 ## POST /api/item/reserve/:id?user_id=int
 
 Attempts to reserve an item for the user. May return an error if the item is unavailable.
-The owner of the resource must follow-up to confirm the reserver is using their resource 
+The owner of the resource must follow-up to confirm the reserver is using their resource
 (see POST /api/item/confirm-reservation/:id?user_id=int), or cancel the reservation if the
 exchange doesn't work out.
 
@@ -111,7 +112,7 @@ with their reservation and is now using the resource.
 }
 ```
 
-The `error` key can be one of `ITEM_UNAVAILABLE`, `NO_RESERVATION`, `INTERNAL_SERVER_ERROR`
+The `error` key can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `NO_RESERVATION`, `INTERNAL_SERVER_ERROR`
 
 ## POST /api/item/cancel-reservation/:id?user_id=int?relist=boolean
 
@@ -140,4 +141,31 @@ re-list the resource for others to reserve.
 }
 ```
 
-The `error` key can be one of `ITEM_UNAVAILABLE`, `NO_RESERVATION`, `INTERNAL_SERVER_ERROR`
+The `error` key can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `NO_RESERVATION`, `INTERNAL_SERVER_ERROR`
+
+## POST /api/item/return/:id?user_id=int
+
+Used by resource borrowers to return a resource.
+
+- `:id` the item's ID
+- `user_id` the user ID of the reserver
+
+### Example response
+
+```json
+{
+  "ok": "RESOURCE_RETURNED",
+  "id": 123
+}
+```
+
+### Example error response
+
+```json
+{
+  "error": "ITEM_UNAVAILABLE",
+  "id": 123
+}
+```
+
+The `error` key can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `UNAUTHORIZED`, `NOT_BORROWED`, `INTERNAL_SERVER_ERROR`

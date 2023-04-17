@@ -38,21 +38,21 @@ const resources_distance_sql = (point) => sql`ST_DistanceSpheroid(
 // Returns true if a PostGIS point and selected resources geography are within a given distance.  
 const resources_within_range_sql = (point, max_distance, type) => {
   let resource_rows;
-  
+
   if (type) {
     resource_rows = sql`ST_DWithin(
       ST_GeomFromText(${point}, 4326),
       resources.location::geography,
       ${max_distance * metersPerMile})
       and type = ${type};`
-  } 
+  }
   else {
     resource_rows = sql`ST_DWithin(
       ST_GeomFromText(${point}, 4326),
       resources.location::geography,
       ${max_distance * metersPerMile});`
   }
-    
+
   return resource_rows;
 };
 
@@ -65,7 +65,7 @@ app.get('/', async (req, res) => {
 app.get('/api/item', async (req, res) => {
   // Get query parameters
   const { type, lat, long, max_distance } = req.query;
-  
+
   if (!lat || !long || !max_distance) {
     return res.status(400).send({
       error: "BAD_REQUEST",
@@ -93,14 +93,14 @@ app.get('/api/item', async (req, res) => {
      left outer join users on users.id = owned_by 
      left outer join images on resource_id = resources.id 
      where ${resources_within_range_sql(point, max_distance, type)}`;
-    
+
     // If rows are empty, items do not exist. 
     if (resources.length < 1) {
       return res.status(404).send({
         error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
       });
     }
-    
+
     // Convert the resources' exact distance in meters to an approximation in miles
     for (let resource of resources) {
       resource.distance = metersToDistanceApproximation(resource.distance_meters);
@@ -338,6 +338,64 @@ app.post('/api/item/cancel-reservation/:id', async (req, res) => {
     });
   }
 });
+
+
+// POST /api/item/return/:id endpoint
+app.post('/api/item/return/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
+
+  if (isNaN(id) || isNaN(user_id)) {
+    return res.status(400).send({
+      error: "BAD_REQUEST",
+      message: "please provide a numeric user ID and item ID"
+    });
+  }
+
+  try {
+    // Select the resource that should be returned
+    const [resource] = await sql`
+      select id, owned_by, reserved_by, reservation_status
+      from resources
+      where id = ${id};
+    `;
+
+    if (!resource) { // No resource found
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        id
+      });
+    } else if (resource.reservation_status != ITEM.CONFIRMED) { // The resource must be confirmed as borrowed
+      return res.status(403).send({
+        error: API_RETURN_MESSAGES.NOT_BORROWED,
+        message: "Cannot return an item that hasn't been borrowed."
+      });
+    } else if (resource.reserved_by != user_id) { // The user cancelling the reservation has to be the borrower
+      return res.status(401).send({
+        error: API_RETURN_MESSAGES.UNAUTHORIZED,
+        message: "You are not authorized to perform this action."
+      });
+    }
+
+    const _update_result = await sql`
+      update resources
+      set reservation_status = ${ITEM.UNLISTED}, reserved_by = NULL where id = ${id};
+    `;
+
+    res.status(200).send({
+      ok: API_RETURN_MESSAGES.RESOURCE_RETURNED,
+      id
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
 
 // Start the webserver
 app.listen(port, () => {
