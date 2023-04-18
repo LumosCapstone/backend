@@ -1,4 +1,4 @@
--- Insert statements for prepopulated tables except for images.
+-- Insert statements for prepopulated tables
 -- Make sure to run create statements first and then the insert statements.
 
 insert into users (name, email, phone_number, password_hash) values
@@ -12,11 +12,11 @@ insert into resources (location, type, name, quantity, owned_by) values
 ('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'fridge_space', 'freezer', 1, 1),
 ('SRID=4326;POINT(-121.82342 36.63958)', 'lanterns', 'gas coleman lantern', 3, 2),
 ('SRID=4326;POINT(-121.82745 36.61942)', 'generators', '3500 watt generator', 2, 3),
-('SRID=4326;POINT(-121.83360 36.60986)', 'fridge_Space', 'refridgerator', 2, 4),
+('SRID=4326;POINT(-121.83360 36.60986)', 'fridge_space', 'refridgerator', 2, 4),
 ('SRID=4326;POINT(-121.82408 36.61325)', 'wifi', 'AT&T 5GHZ', 1, 5),
-('SRID=4326;POINT(-121.82342 36.63958)', 'candels', 'beeswax candle', 5, 2),
+('SRID=4326;POINT(-121.82342 36.63958)', 'candles', 'beeswax candle', 5, 2),
 ('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'batteries', 'triple & double A', 10, 1),
-('SRID=4326;POINT(-121.82745 36.61942)', 'first aid kit', 'medical emergancy kit', 3, 3);
+('SRID=4326;POINT(-121.82745 36.61942)', 'first_aid_kit', 'medical emergancy kit', 3, 3);
 
 
 insert into images (id, content, resource_id) values 
@@ -27,4 +27,4 @@ insert into images (id, content, resource_id) values
 (5, 'https://media.istockphoto.com/id/1261027671/vector/wifi-icon.jpg?s=612x612&w=0&k=20&c=cILPmAhltJetlunXkfIIef-PvPwSkZd5710ofXBsstY=', 5),
 (6, 'https://st3.depositphotos.com/4562487/13400/v/450/depositphotos_134008856-stock-illustration-candle-icon-illustration.jpg', 6),
 (7, 'https://static.vecteezy.com/system/resources/thumbnails/000/574/802/small/vector60-6153-01.jpg', 7),
-(8, 'https://static.vecteezy.com/system/resources/previews/000/602/288/original/first-aid-box-line-black-icon-vector.jpg', 8)
+(8, 'https://static.vecteezy.com/system/resources/previews/000/602/288/original/first-aid-box-line-black-icon-vector.jpg', 8);
