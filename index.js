@@ -92,7 +92,8 @@ app.get('/api/item', async (req, res) => {
      from resources 
      left outer join users on users.id = owned_by 
      left outer join images on resource_id = resources.id 
-     where ${resources_within_range_sql(point, max_distance, type)}`;
+     where reservation_status = ${ITEM.LISTED} and
+     ${resources_within_range_sql(point, max_distance, type)}`;
 
     // If rows are empty, items do not exist. 
     if (resources.length < 1) {
