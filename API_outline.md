@@ -169,3 +169,31 @@ Used by resource borrowers to return a resource.
 ```
 
 The `error` key can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `UNAUTHORIZED`, `NOT_BORROWED`, `INTERNAL_SERVER_ERROR`
+
+## GET /api/user/:id
+
+Gets a user by ID
+
+- `:id` the user's ID
+
+### Example response
+
+```json
+{
+  "id": 123,
+  "name": "john smith",
+  "email": "j.smith@example.com",
+  "phone_number": null
+}
+```
+
+### Example error response
+
+```json
+{
+  "error": "USER_NOT_FOUND",
+  "id": 123
+}
+```
+
+The `error` key can be one of `BAD_REQUEST` or `USER_NOT_FOUND`
