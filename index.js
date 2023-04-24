@@ -1,12 +1,13 @@
 import * as dotenv from 'dotenv';
 import express from 'express';
 import postgres from 'postgres';
-
+import bcrpyt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 dotenv.config();
 
 const app = express();
 const port = 3000;
-
+app.use(express.json())
 const sql = postgres({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -434,6 +435,38 @@ app.get('/api/user/:id', async (req, res) => {
   }
 });
 
+
+app.post('/api/login', async(req, res)=>{
+  try {
+    const { email, password } = req.body;
+
+    if (email == undefined || password == undefined){
+        return res.status(400).send({
+            error : "All parameters required"
+        })
+    }
+    const query = 'SELECT * FROM users WHERE email = $1';
+    const rows  = await sql `SELECT * FROM users where email = ${email};`
+
+    if (rows.length === 0) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = rows[0];
+    const valid = await bcrpyt.compare(password, user.password_hash);
+    if (!valid) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET,{
+        expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+    return res.status(200).json({ token });
+} catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error' });
+}
+})
 // Start the webserver
 app.listen(port, () => {
   console.log(`Broker is listening on port ${port}`);
