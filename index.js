@@ -231,7 +231,7 @@ app.post('/api/register', async (req, res) => {
     res.sendStatus(201);
   } catch (err) {
     console.error(err);
-    res.status(500).json({error: "Internal_Server_Error"})
+    res.status(500).json({error: "INTERNAL_SERVER_ERROR"})
   }
 });
 
