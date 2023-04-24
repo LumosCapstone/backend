@@ -170,6 +170,33 @@ Used by resource borrowers to return a resource.
 
 The `error` key can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `UNAUTHORIZED`, `NOT_BORROWED`, `INTERNAL_SERVER_ERROR`
 
+## POST /api/item/listing/:id?user_id=int&list=boolean
+
+Used by resource owners to list or unlist their items
+
+- `:id` the item's ID
+- `user_id` user ID of the owner
+- `list` whether to list, or unlist the item
+
+### Example response
+
+```json
+{
+  "ok": "ITEM_UNLISTED",
+  "id": 123
+}
+```
+
+### Example error response
+
+```json
+{
+  "error": "ITEM_UNAVAILABLE",
+}
+```
+
+The `error` can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `UNAUTHORIZED`, `RESERVED`, `INTERNAL_SERVER_ERROR`
+
 ## GET /api/user/:id
 
 Gets a user by ID
