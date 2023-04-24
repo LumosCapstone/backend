@@ -8,15 +8,15 @@ insert into users (name, email, phone_number, password_hash) values
 ('Liliana Valencia', 'lilival@csumb.edu', '8312938501', 'Val485672'),
 ('Rohit Kannaujiya', 'rkannau@csumb.edu', '8315432167', 'Roh6789');
 
-insert into resources (location, type, name, quantity, owned_by) values 
-('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'fridge_space', 'freezer', 1, 1),
-('SRID=4326;POINT(-121.82342 36.63958)', 'lanterns', 'gas coleman lantern', 3, 2),
-('SRID=4326;POINT(-121.82745 36.61942)', 'generators', '3500 watt generator', 2, 3),
-('SRID=4326;POINT(-121.83360 36.60986)', 'fridge_space', 'refridgerator', 2, 4),
-('SRID=4326;POINT(-121.82408 36.61325)', 'wifi', 'AT&T 5GHZ', 1, 5),
-('SRID=4326;POINT(-121.82342 36.63958)', 'candles', 'beeswax candle', 5, 2),
-('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'batteries', 'triple & double A', 10, 1),
-('SRID=4326;POINT(-121.82745 36.61942)', 'first_aid_kit', 'medical emergancy kit', 3, 3);
+insert into resources (location, type, name, quantity, owned_by, reservation_status) values 
+('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'fridge_space', 'freezer', 1, 1, 0),
+('SRID=4326;POINT(-121.82342 36.63958)', 'lanterns', 'gas coleman lantern', 3, 2, 0),
+('SRID=4326;POINT(-121.82745 36.61942)', 'generators', '3500 watt generator', 2, 3, 0),
+('SRID=4326;POINT(-121.83360 36.60986)', 'fridge_space', 'refridgerator', 2, 4, 0),
+('SRID=4326;POINT(-121.82408 36.61325)', 'wifi', 'AT&T 5GHZ', 1, 5, 0),
+('SRID=4326;POINT(-121.82342 36.63958)', 'candles', 'beeswax candle', 5, 2, 0),
+('SRID=4326;POINT(-121.92248246169913 36.58336131937593)', 'batteries', 'triple & double A', 10, 1, 0),
+('SRID=4326;POINT(-121.82745 36.61942)', 'first_aid_kit', 'medical emergancy kit', 3, 3, 0);
 
 
 insert into images (id, content, resource_id) values 
