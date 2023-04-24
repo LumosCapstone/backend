@@ -1,3 +1,4 @@
+
 # Logs
 logs
 *.log
@@ -104,3 +105,8 @@ dist
 .tern-port
 
 .vscode/
+
+# DS_Store
+.DS_Store
+.gitignore.swp
+.idea/

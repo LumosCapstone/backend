@@ -22,7 +22,7 @@ const sql = postgres({
   password: process.env.DB_PASSWORD,
 });
 
-import { RESOURCE_TYPES, API_RETURN_MESSAGES } from './js/constants.js';
+import { RESOURCE_TYPES, API_RETURN_MESSAGES, ITEM } from './api/constants.js';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const metersPerMile = 1609.34;
@@ -37,11 +37,32 @@ const metersToDistanceApproximation = meters => {
 
 // Gives the distance in meters between the given PostGIS point and selected resources.
 // Example of point: `POINT(-121.2352251 85.22345752)`
-const distance_sql = (point) => sql`ST_DistanceSpheroid(
+const resources_distance_sql = (point) => sql`ST_DistanceSpheroid(
   ST_GeomFromText(${point}, 4326), 
   resources.location, 
   'SPHEROID["WGS 84",6378137,298.257223563]'
 ) as distance_meters`;
+
+// Returns true if a PostGIS point and selected resources geography are within a given distance.  
+const resources_within_range_sql = (point, max_distance, type) => {
+  let resource_rows;
+
+  if (type) {
+    resource_rows = sql`ST_DWithin(
+      ST_GeomFromText(${point}, 4326),
+      resources.location::geography,
+      ${max_distance * metersPerMile})
+      and type = ${type};`
+  }
+  else {
+    resource_rows = sql`ST_DWithin(
+      ST_GeomFromText(${point}, 4326),
+      resources.location::geography,
+      ${max_distance * metersPerMile});`
+  }
+
+  return resource_rows;
+};
 
 app.get('/', async (req, res) => {
   const [{ '?column?': one }] = await sql`select 1;`;
@@ -51,7 +72,8 @@ app.get('/', async (req, res) => {
 // GET /api/item endpoint
 app.get('/api/item', async (req, res) => {
   // Get query parameters
-  const { lat, long, max_distance } = req.query;
+  const { type, lat, long, max_distance } = req.query;
+
   if (!lat || !long || !max_distance) {
     return res.status(400).send({
       error: "BAD_REQUEST",
@@ -70,17 +92,23 @@ app.get('/api/item', async (req, res) => {
   try {
     // Select resources, join owner and one image per resource
     const point = `POINT(${long} ${lat})`;
+
     const resources = await sql`
-      select distinct on (resources.id)
-        resources.id, resources.name, type, quantity, users.name as seller, content as image, ${distance_sql(point)}
-      from resources 
-      left outer join users on users.id = owned_by 
-      left outer join images on resource_id = resources.id 
-      where ST_DWithin(
-        ST_GeomFromText(${point}, 4326),
-        resources.location::geography,
-        ${max_distance * metersPerMile}
-      )`;
+     select distinct on (resources.id)
+       resources.id, resources.name, type, quantity, users.name as seller, content as image, 
+       ${resources_distance_sql(point)}
+     from resources 
+     left outer join users on users.id = owned_by 
+     left outer join images on resource_id = resources.id 
+     where reservation_status = ${ITEM.LISTED} and
+     ${resources_within_range_sql(point, max_distance, type)}`;
+
+    // If rows are empty, items do not exist. 
+    if (resources.length < 1) {
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+      });
+    }
 
     // Convert the resources' exact distance in meters to an approximation in miles
     for (let resource of resources) {
@@ -88,11 +116,11 @@ app.get('/api/item', async (req, res) => {
       delete resource.distance_meters;
     }
 
-    res.send(resources);
+    res.status(200).send(resources);
   } catch (error) {
     console.error(error);
 
-    res.send({
+    res.status(500).send({
       error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
       message: "Internal Server Error"
     });
@@ -119,7 +147,7 @@ app.get('/api/item/:id', async (req, res) => {
     // If undefined, this item doesn't exist
     if (!resource) {
       return res.status(404).send({
-        error: "ITEM_UNAVAILABLE",
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
         id
       });
     }
@@ -152,11 +180,12 @@ app.post('/api/item/reserve/:id', async (req, res) => {
   }
 
   try {
-    // Get the item, but only if it currently belongs to someone
+    // Get the item, but only if it is currently reserved
     const items = await sql`
       select owned_by
       from resources
-      where id = ${id} and reserved_by IS NOT NULL;`;
+      where id = ${id} and reservation_status in (${ITEM.RESERVED}, ${ITEM.CONFIRMED});
+    `;
 
     // If we get rows back, the item is already reserved
     if (items.length > 0) {
@@ -166,18 +195,247 @@ app.post('/api/item/reserve/:id', async (req, res) => {
       });
     }
 
+    // TODO: Could probably reduce this from 3 -> 2 queries by joining seller info on the resources select above.
+    const [owner] = await sql`
+      select name as seller, email as seller_email, phone_number as seller_phone 
+      from users
+      where id = ${user_id};
+    `;
+
+    if (!owner) {
+      console.error(`Tried to reserve resource with unknown owner/user_id: ${user_id}`);
+
+      return res.status(500).send({
+        error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+        message: "Internal Server Error"
+      });
+    }
+
     // If we got no rows back, update the item to be reserved by `user_id`
-    const result = await sql`update resources 
-      set reserved_by = ${user_id} where id = ${id}`;
+    const _ = await sql`update resources 
+      set reserved_by = ${user_id}, reservation_status = ${ITEM.RESERVED} where id = ${id}`;
 
     res.status(200).send({
       ok: API_RETURN_MESSAGES.RESERVE_SUCCESS,
+      seller: owner.seller,
+      seller_email: owner.seller_email,
+      seller_phone: owner.seller_phone,
       id
     });
   } catch (error) {
     console.error(error);
 
-    res.send({
+    res.status(500).send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+// POST /api/item/confirm-reservation/:id endpoint
+app.post('/api/item/confirm-reservation/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
+
+  if (isNaN(id) || isNaN(user_id)) {
+    return res.status(400).send({
+      error: "BAD_REQUEST",
+      message: "please provide a numeric user ID and item ID"
+    });
+  }
+
+  try {
+    // Select the resource whose reservation should be confirmed
+    const [resource] = await sql`
+      select id, owned_by, reservation_status
+      from resources
+      where id = ${id};
+    `;
+
+    if (!resource) { // No resource found
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        id
+      });
+    } else if (resource.owned_by != user_id) { // The user confirming the reservation has to be the owner
+      return res.status(401).send({
+        error: API_RETURN_MESSAGES.UNAUTHORIZED,
+        message: "You are not authorized to perform this action."
+      });
+    } else if (resource.reservation_status != ITEM.RESERVED) { // The resource must have a reservation to confirm
+      return res.status(403).send({
+        error: API_RETURN_MESSAGES.NO_RESERVATION,
+        message: "No reservation to confirm."
+      });
+    }
+
+    const _update_result = await sql`
+      update resources 
+      set reservation_status = ${ITEM.CONFIRMED} where id = ${id};
+    `;
+
+    res.status(200).send({
+      ok: API_RETURN_MESSAGES.RESERVE_CONFIRMATION_SUCCESS,
+      id
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+// POST /api/item/cancel-reservation/:id endpoint
+app.post('/api/item/cancel-reservation/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
+  let relist = req.query.relist;
+
+  if (isNaN(id) || isNaN(user_id)) {
+    return res.status(400).send({
+      error: "BAD_REQUEST",
+      message: "please provide a numeric user ID and item ID"
+    });
+  }
+
+  try {
+    // Select the resource whose reservation should be cancelled
+    const [resource] = await sql`
+      select id, owned_by, reserved_by, reservation_status
+      from resources
+      where id = ${id};
+    `;
+
+    if (!resource) { // No resource found
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        id
+      });
+    } else if (![resource.owned_by, resource.reserved_by].includes(user_id)) { // The user cancelling the reservation has to be the owner or the reserver
+      return res.status(401).send({
+        error: API_RETURN_MESSAGES.UNAUTHORIZED,
+        message: "You are not authorized to perform this action."
+      });
+    } else if (resource.reservation_status != ITEM.RESERVED && resource.reservation_status != ITEM.CONFIRMED) { // The resource must have an unconfirmed reservation to cancel
+      return res.status(403).send({
+        error: API_RETURN_MESSAGES.NO_RESERVATION,
+        message: "No reservation to cancel."
+      });
+    }
+
+    // `relist` query param defaults to false
+    if (relist == undefined) relist = false;
+
+    const _update_result = await sql`
+      update resources 
+      set reservation_status = ${relist ? ITEM.LISTED : ITEM.UNLISTED}, reserved_by = NULL where id = ${id};
+    `;
+
+    res.status(200).send({
+      ok: API_RETURN_MESSAGES.RESERVE_CANCELLATION_SUCCESS,
+      id
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+// POST /api/item/return/:id endpoint
+app.post('/api/item/return/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const user_id = parseInt(req.query.user_id);
+
+  if (isNaN(id) || isNaN(user_id)) {
+    return res.status(400).send({
+      error: "BAD_REQUEST",
+      message: "please provide a numeric user ID and item ID"
+    });
+  }
+
+  try {
+    // Select the resource that should be returned
+    const [resource] = await sql`
+      select id, owned_by, reserved_by, reservation_status
+      from resources
+      where id = ${id};
+    `;
+
+    if (!resource) { // No resource found
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.ITEM_UNAVAILABLE,
+        id
+      });
+    } else if (resource.reservation_status != ITEM.CONFIRMED) { // The resource must be confirmed as borrowed
+      return res.status(403).send({
+        error: API_RETURN_MESSAGES.NOT_BORROWED,
+        message: "Cannot return an item that hasn't been borrowed."
+      });
+    } else if (resource.reserved_by != user_id) { // The user cancelling the reservation has to be the borrower
+      return res.status(401).send({
+        error: API_RETURN_MESSAGES.UNAUTHORIZED,
+        message: "You are not authorized to perform this action."
+      });
+    }
+
+    const _update_result = await sql`
+      update resources
+      set reservation_status = ${ITEM.UNLISTED}, reserved_by = NULL where id = ${id};
+    `;
+
+    res.status(200).send({
+      ok: API_RETURN_MESSAGES.RESOURCE_RETURNED,
+      id
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
+      error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
+      message: "Internal Server Error"
+    });
+  }
+});
+
+app.get('/api/user/:id', async (req, res) => {
+  const user_id = parseInt(req.params.id);
+
+  if (isNaN(user_id)) {
+    return res.status(400).send({
+      error: "BAD_REQUEST",
+      message: "please provide a numeric user ID"
+    });
+  }
+
+  try {
+    // Fetch the user
+    const [user] = await sql`
+      select id, name, email, phone_number
+      from users
+      where id = ${user_id};
+    `;
+
+    // If `!user`, a user under the given ID doesn't exist
+    if (!user) {
+      return res.status(404).send({
+        error: API_RETURN_MESSAGES.USER_NOT_FOUND,
+        id: user_id
+      });
+    }
+
+    res.status(200).send(user);
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).send({
       error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
       message: "Internal Server Error"
     });

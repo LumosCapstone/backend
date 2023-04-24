@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="0EbGmxLs03rvGyQIjWrv" name="Page-1">
-        <mxGraphModel dx="202" dy="399" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="890" dy="416" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -13,7 +13,7 @@
                 <mxCell id="BZzWXipZtvT7cpwbV_F--3" value="resources" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;" parent="1" vertex="1">
                     <mxGeometry x="240" y="380" width="210" height="150" as="geometry"/>
                 </mxCell>
-                <mxCell id="BZzWXipZtvT7cpwbV_F--4" value="id: int NOT NULL PK&#10;type: varchar NOT NULL&#10;name: varchar&#10;location: geometry NOT NULL&#10;quantity: int NOT NULL (check &gt; 0)&#10;reserved_by: foreign_key(users)&#10;&#10;" style="align=left;strokeColor=none;fillColor=none;spacingLeft=4;fontSize=12;verticalAlign=top;resizable=0;rotatable=0;part=1;" parent="BZzWXipZtvT7cpwbV_F--3" vertex="1">
+                <mxCell id="BZzWXipZtvT7cpwbV_F--4" value="id: int NOT NULL PK&#10;type: varchar NOT NULL&#10;name: varchar&#10;location: geometry NOT NULL&#10;quantity: int NOT NULL (check &gt; 0)&#10;reserved_by: foreign_key(users)&#10;reservation_status: int&#10;" style="align=left;strokeColor=none;fillColor=none;spacingLeft=4;fontSize=12;verticalAlign=top;resizable=0;rotatable=0;part=1;" parent="BZzWXipZtvT7cpwbV_F--3" vertex="1">
                     <mxGeometry y="30" width="210" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="BZzWXipZtvT7cpwbV_F--6" value="images" style="swimlane;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;rounded=1;fontSize=14;fontStyle=0;strokeWidth=2;resizeParent=0;resizeLast=1;shadow=0;dashed=0;align=center;" parent="1" vertex="1">
@@ -38,6 +38,15 @@
                     <mxGeometry width="100" height="100" relative="1" as="geometry">
                         <mxPoint x="460" y="480" as="sourcePoint"/>
                         <mxPoint x="560" y="480" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" value="The reservation_status column represents the borrowed state of the resource.&lt;br&gt;0 = listed in the app for reservation&lt;br&gt;1 = reserved by `reserved_by`, waiting for confirmation from resource owner&lt;br&gt;2 = confirmed to be borrowed and in use by `reserved_by`&lt;br&gt;3 = not currently borrowed, and not listed in the app" style="shape=note;size=20;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="225" y="560" width="240" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.005;entryY=0.838;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="2" target="BZzWXipZtvT7cpwbV_F--4" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="650" y="570" as="sourcePoint"/>
+                        <mxPoint x="650" y="525" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
             </root>
