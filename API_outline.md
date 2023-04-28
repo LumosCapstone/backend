@@ -197,3 +197,47 @@ Gets a user by ID
 ```
 
 The `error` key can be one of `BAD_REQUEST` or `USER_NOT_FOUND`
+
+
+## POST /api/login
+
+Used by users to perform login/sign-in action
+
+INPUT FORMAT: 
+```json
+{
+  "email": "johndoe@gmail.com",
+  "password": "johndoe123"
+}
+```
+
+### Example response
+```json
+{
+  "token": "" //jwt token
+}
+```
+
+### Example error response
+```json
+{
+  "error": "Invalid email or password"
+  
+}
+```
+
+```json
+{
+  "error": "All parameters required"
+}
+
+```
+
+```json
+{
+  "error": "Internal server error"
+}
+
+```
+
+The `error` key can be one of `BAD_REQUEST` , `USER_NOT_FOUND` Or `Internal_server_error`
