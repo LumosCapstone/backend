@@ -221,23 +221,23 @@ INPUT FORMAT:
 ### Example error response
 ```json
 {
-  "error": "Invalid email or password"
+  "error": "INVALID_EMAIL_OR_PASSWORD"
   
 }
 ```
 
 ```json
 {
-  "error": "All parameters required"
+  "error": "All_PARAMETER_REQUIRED"
 }
 
 ```
 
 ```json
 {
-  "error": "Internal server error"
+  "error": "INTERNAL_SERVER_ERROR"
 }
 
 ```
 
-The `error` key can be one of `BAD_REQUEST` , `USER_NOT_FOUND` Or `Internal_server_error`
+The `error` key can be one of `BAD_REQUEST` , `USER_NOT_FOUND` Or `INTERNAL_SERVER_ERROR`

@@ -442,20 +442,20 @@ app.post('/api/login', async(req, res)=>{
 
     if (email == undefined || password == undefined){
         return res.status(400).send({
-            error : "All parameters required"
+            error : "All_PARAMETER_REQUIRED"
         })
     }
     const query = 'SELECT * FROM users WHERE email = $1';
     const rows  = await sql `SELECT * FROM users where email = ${email};`
 
     if (rows.length === 0) {
-        return res.status(401).json({ error: 'Invalid_email_or_password' });
+        return res.status(401).json({ error: 'INVALID_EMAIL_OR_PASSWORD' });
     }
 
     const user = rows[0];
     const valid = await bcrpyt.compare(password, user.password_hash);
     if (!valid) {
-        return res.status(401).json({ error: 'Invalid_email_or_password' });
+        return res.status(401).json({ error: 'INVALID_EMAIL_OR_PASSWORD' });
     }
 
     const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET,{
@@ -464,7 +464,7 @@ app.post('/api/login', async(req, res)=>{
     return res.status(200).json({ token });
 } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Internal_server_error' });
+    return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
 }
 })
 // Start the webserver
