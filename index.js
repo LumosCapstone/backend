@@ -521,7 +521,7 @@ app.get('/api/user/:id', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   var { name, email, phone_number, password } = req.body;
 
-  if (email == "" || name == "" || password == "") {
+  if (!email || !name || !password) {
     res.status(400).json({error: 'All_FIELDS_ARE_REQUIRED'});
     return;
   }
