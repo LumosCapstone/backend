@@ -449,19 +449,19 @@ app.post('/api/register', async (req, res) => {
   var { name, email, phone_number, password } = req.body;
 
   if (email == "" || name == "" || password == "") {
-    res.status(400).send('All fields are required');
+    res.status(400).json({error: 'All_FIELDS_ARE_REQUIRED'});
     return;
   }
 
   if (phone_number != undefined && phone_number != "" && phone_number.length != 10 ) {
-    res.status(400).json({error: 'Invalid phone number'});
+    res.status(400).json({error: 'INVALID_PHONE_NUMBER'});
     return;
   }else if(phone_number == undefined){
     phone_number = ""
   }
 
   if (!emailRegex.test(email)) {
-    res.status(400).json({error: 'Invalid email'});
+    res.status(400).json({error: 'INVALID_EMAIL'});
     return;
   }
 
@@ -486,7 +486,9 @@ app.post('/api/register', async (req, res) => {
       VALUES (${name}, ${email}, ${hashedPassword}, ${phone_number})
     `;
 
-    res.sendStatus(201);
+    res.status(200).json({
+      message:"REGISTERED SUCCESFULLY"
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({error: "INTERNAL_SERVER_ERROR"})
