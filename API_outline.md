@@ -248,13 +248,6 @@ INPUT FORMAT
 
 ```json
 {
-  "error": "REGISTERED SUCCESFULLY"
-}
-
-```
-
-```json
-{
   "error": "INVALID_PHONE_NUMBER"
 }
 
