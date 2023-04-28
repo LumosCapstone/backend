@@ -526,7 +526,7 @@ app.post('/api/register', async (req, res) => {
     return;
   }
 
-  if (phone_number != undefined && phone_number != "" && phone_number.length != 10 ) {
+  if (phone_number && phone_number.length != 10 ) {
     res.status(400).json({error: 'INVALID_PHONE_NUMBER'});
     return;
   }else if(phone_number == undefined){
