@@ -548,7 +548,7 @@ app.post('/api/register', async (req, res) => {
     if (existingUser.length > 0) {
       res.status(400).json({
         "error": "EMAIL_ALREADY_REGISTERED",
-        "email": "email@example.com"
+        "email": email
       })
       return;
     }
