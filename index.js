@@ -1,11 +1,18 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 import * as dotenv from 'dotenv';
 import express from 'express';
 import postgres from 'postgres';
+
+const bodyParser = require('body-parser')
+const bcrypt = require('bcrypt')
+
 
 dotenv.config();
 
 const app = express();
 const port = 3000;
+app.use(express.json())
 
 const sql = postgres({
   host: process.env.DB_HOST,
@@ -17,6 +24,7 @@ const sql = postgres({
 
 import { RESOURCE_TYPES, API_RETURN_MESSAGES, ITEM } from './api/constants.js';
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const metersPerMile = 1609.34;
 const metersToDistanceApproximation = meters => {
   if (meters < 2 * metersPerMile) return "< 2 miles"
@@ -506,6 +514,60 @@ app.get('/api/user/:id', async (req, res) => {
     });
   }
 });
+
+
+
+// register new user
+app.post('/api/register', async (req, res) => {
+  var { name, email, phone_number, password } = req.body;
+
+  if (!email || !name || !password) {
+    res.status(400).json({error: 'All_FIELDS_ARE_REQUIRED'});
+    return;
+  }
+
+  if (phone_number && phone_number.length != 10 ) {
+    res.status(400).json({error: 'INVALID_PHONE_NUMBER'});
+    return;
+  }else if(phone_number == undefined){
+    phone_number = ""
+  }
+
+  if (!emailRegex.test(email)) {
+    res.status(400).json({error: 'INVALID_EMAIL'});
+    return;
+  }
+
+  try {
+    const existingUser = await sql`
+      SELECT * FROM users
+      WHERE email = ${email}
+      LIMIT 1
+    `;
+
+    if (existingUser.length > 0) {
+      res.status(400).json({
+        "error": "EMAIL_ALREADY_REGISTERED",
+        "email": email
+      })
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await sql`
+      INSERT INTO users (name,email,password_hash, phone_number)
+      VALUES (${name}, ${email}, ${hashedPassword}, ${phone_number})
+    `;
+
+    res.status(200).json({
+      ok: "REGISTERED_SUCCESFULLY"
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({error: "INTERNAL_SERVER_ERROR"})
+  }
+});
+
 
 // Start the webserver
 app.listen(port, () => {
