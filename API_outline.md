@@ -170,6 +170,33 @@ Used by resource borrowers to return a resource.
 
 The `error` key can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `UNAUTHORIZED`, `NOT_BORROWED`, `INTERNAL_SERVER_ERROR`
 
+## POST /api/item/listing/:id?user_id=int&list=boolean
+
+Used by resource owners to list or unlist their items
+
+- `:id` the item's ID
+- `user_id` user ID of the owner
+- `list` whether to list, or unlist the item
+
+### Example response
+
+```json
+{
+  "ok": "ITEM_UNLISTED",
+  "id": 123
+}
+```
+
+### Example error response
+
+```json
+{
+  "error": "ITEM_UNAVAILABLE",
+}
+```
+
+The `error` can be one of `BAD_REQUEST`, `ITEM_UNAVAILABLE`, `UNAUTHORIZED`, `RESERVED`, `INTERNAL_SERVER_ERROR`
+
 ## GET /api/user/:id
 
 Gets a user by ID
@@ -230,14 +257,45 @@ INPUT FORMAT:
 {
   "error": "All_PARAMETER_REQUIRED"
 }
+```
 
+
+## POST /api/register
+
+INPUT FORMAT
+
+```json
+{
+  "name": "john doe",
+  "email": "johndoe@gmail.com",
+  "phone_number": "8312345678",
+  "password": "johndoe",
+}
+```
+
+### Example response
+```json
+{
+  "message": "REGISTERED_SUCCESFULLY"
+}
+
+```
+### Example error response
+
+```json
+{
+  "error": "INVALID_PHONE_NUMBER"
+}
+```
+
+```json
+{
+  "error": "INVALID_EMAIL"
+}
 ```
 
 ```json
 {
   "error": "INTERNAL_SERVER_ERROR"
 }
-
 ```
-
-The `error` key can be one of `BAD_REQUEST` , `USER_NOT_FOUND` Or `INTERNAL_SERVER_ERROR`
