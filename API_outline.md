@@ -191,7 +191,7 @@ Used by resource owners to list or unlist their items
 
 ```json
 {
-  "error": "ITEM_UNAVAILABLE",
+  "error": "ITEM_UNAVAILABLE"
 }
 ```
 
@@ -225,6 +225,42 @@ Gets a user by ID
 
 The `error` key can be one of `BAD_REQUEST` or `USER_NOT_FOUND`
 
+## POST /api/login
+
+Used by users to perform login/sign-in action
+
+INPUT FORMAT:
+
+```json
+{
+  "email": "johndoe@gmail.com",
+  "password": "johndoe123"
+}
+```
+
+### Example response
+
+```json
+{
+  "token": "", // jwt token
+  "id": 123 // user ID
+}
+```
+
+### Example error response
+
+```json
+{
+  "error": "INVALID_EMAIL_OR_PASSWORD"
+}
+```
+
+```json
+{
+  "error": "All_PARAMETER_REQUIRED"
+}
+```
+
 ## POST /api/register
 
 INPUT FORMAT
@@ -234,35 +270,34 @@ INPUT FORMAT
   "name": "john doe",
   "email": "johndoe@gmail.com",
   "phone_number": "8312345678",
-  "password": "johndoe",
+  "password": "johndoe"
 }
 ```
+
 ### Example response
+
 ```json
 {
-  "message": "REGISTERED SUCCESFULLY"
+  "message": "REGISTERED_SUCCESFULLY"
 }
-
 ```
+
 ### Example error response
 
 ```json
 {
   "error": "INVALID_PHONE_NUMBER"
 }
-
 ```
+
 ```json
 {
   "error": "INVALID_EMAIL"
 }
-
 ```
 
 ```json
 {
   "error": "INTERNAL_SERVER_ERROR"
 }
-
 ```
-The `error` key can be one of `BAD_REQUEST` or `USER_NOT_FOUND`

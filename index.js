@@ -3,10 +3,10 @@ const require = createRequire(import.meta.url);
 import * as dotenv from 'dotenv';
 import express from 'express';
 import postgres from 'postgres';
+import jwt from 'jsonwebtoken'
 
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
-
 
 dotenv.config();
 
@@ -439,8 +439,7 @@ app.post('/api/item/listing/:id', async (req, res) => {
         error: API_RETURN_MESSAGES.UNAUTHORIZED,
         message: "You are not authorized to perform this action"
       });
-    } else if (resource.reservation_status != ITEM.LISTED && resource.reservation_status != ITEM.UNLISTED) 
-    { // the item cannot be reserved
+    } else if (resource.reservation_status != ITEM.LISTED && resource.reservation_status != ITEM.UNLISTED) { // the item cannot be reserved
       return res.status(403).send({
         error: API_RETURN_MESSAGES.RESERVED,
         message: "Cannot alter the listing of an item that is currently reserved"
@@ -450,26 +449,26 @@ app.post('/api/item/listing/:id', async (req, res) => {
     // update resource
     const update_item_listing = await sql`
       update resources
-      set reservation_status = ${(status ? ITEM.LISTED: ITEM.UNLISTED)}
+      set reservation_status = ${(status ? ITEM.LISTED : ITEM.UNLISTED)}
       where id = ${id}
     `;
 
     if (status) {
-      return res.status(200).send( {
+      return res.status(200).send({
         ok: API_RETURN_MESSAGES.RELISTED,
         id
       });
-      
+
     } else {
-      return res.status(200).send( {
+      return res.status(200).send({
         ok: API_RETURN_MESSAGES.UNLISTED,
         id
       });
     }
   }
-  catch(error) {
+  catch (error) {
     console.error(error);
-    
+
     res.status(500).send({
       error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
       message: "Internal Server Error"
@@ -507,7 +506,7 @@ app.get('/api/user/:id', async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    
+
     res.status(500).send({
       error: API_RETURN_MESSAGES.INTERNAL_SERVER_ERROR,
       message: "Internal Server Error"
@@ -516,25 +515,57 @@ app.get('/api/user/:id', async (req, res) => {
 });
 
 
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (email == undefined || password == undefined) {
+      return res.status(400).send({
+        error: "All_PARAMETER_REQUIRED"
+      });
+    }
+
+    const rows = await sql`SELECT * FROM users where email = ${email};`
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: 'INVALID_EMAIL_OR_PASSWORD' });
+    }
+
+    const user = rows[0];
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ error: 'INVALID_EMAIL_OR_PASSWORD' });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+    return res.status(200).json({ token, id: user.id });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+  }
+});
+
 
 // register new user
 app.post('/api/register', async (req, res) => {
   var { name, email, phone_number, password } = req.body;
 
   if (!email || !name || !password) {
-    res.status(400).json({error: 'All_FIELDS_ARE_REQUIRED'});
+    res.status(400).json({ error: 'All_FIELDS_ARE_REQUIRED' });
     return;
   }
 
-  if (phone_number && phone_number.length != 10 ) {
-    res.status(400).json({error: 'INVALID_PHONE_NUMBER'});
+  if (phone_number && phone_number.length != 10) {
+    res.status(400).json({ error: 'INVALID_PHONE_NUMBER' });
     return;
-  }else if(phone_number == undefined){
+  } else if (phone_number == undefined) {
     phone_number = ""
   }
 
   if (!emailRegex.test(email)) {
-    res.status(400).json({error: 'INVALID_EMAIL'});
+    res.status(400).json({ error: 'INVALID_EMAIL' });
     return;
   }
 
@@ -564,7 +595,7 @@ app.post('/api/register', async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({error: "INTERNAL_SERVER_ERROR"})
+    res.status(500).json({ error: "INTERNAL_SERVER_ERROR" })
   }
 });
 
