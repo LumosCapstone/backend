@@ -3,7 +3,6 @@ const require = createRequire(import.meta.url);
 import * as dotenv from 'dotenv';
 import express from 'express';
 import postgres from 'postgres';
-import bcrpyt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 const bodyParser = require('body-parser')
@@ -533,7 +532,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     const user = rows[0];
-    const valid = await bcrpyt.compare(password, user.password_hash);
+    const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ error: 'INVALID_EMAIL_OR_PASSWORD' });
     }
