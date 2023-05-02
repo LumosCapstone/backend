@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-router.post('/api/register', async (req, res) => {
+router.post('/register', async (req, res) => {
     var { name, email, phone_number, password } = req.body;
   
     if (!email || !name || !password) {
