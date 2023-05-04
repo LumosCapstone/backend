@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
-
 // GET /api/user/:id endpoint
-router.get('/user/:id', async (req, res) => {
+export async function userRoute(req, res) {
   const user_id = parseInt(req.params.id);
 
   if (isNaN(user_id)) {
@@ -38,6 +35,4 @@ router.get('/user/:id', async (req, res) => {
       message: "Internal Server Error"
     });
   }
-});
-
-module.exports = router;
+};

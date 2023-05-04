@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
-
 // GET /api/item endpoint
-router.get('/', async (req, res) => {
+export async function item_list(req, res) {
   // Get query parameters
   const { type, lat, long, max_distance } = req.query;
 
@@ -57,10 +54,10 @@ router.get('/', async (req, res) => {
       message: "Internal Server Error"
     });
   }
-});
+};
 
 // GET /api/item/:id endpoint
-router.get('/:id', async (req, res) => {
+export async function item_view(req, res) {
   // Parse item ID
   const id = parseInt(req.params.id);
   if (isNaN(id)) {
@@ -96,6 +93,4 @@ router.get('/:id', async (req, res) => {
       message: "Internal Server Error"
     });
   }
-});
-
-module.exports = router;
+};

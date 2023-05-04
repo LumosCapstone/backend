@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
-
 // POST /api/item/confirm-reservation/:id endpoint
-router.post('/confirm-reservation/:id', async (req, res) => {
+export async function confirmRoute(req, res) {
     const id = parseInt(req.params.id);
     const user_id = parseInt(req.query.user_id);
   
@@ -55,6 +52,4 @@ router.post('/confirm-reservation/:id', async (req, res) => {
         message: "Internal Server Error"
       });
     }
-  });
-
-module.exports = router;
+  };

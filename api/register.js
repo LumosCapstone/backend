@@ -1,7 +1,4 @@
-const express = require("express");
-const router = express.Router();
-
-router.post('/register', async (req, res) => {
+export async function registerRoute(req, res) {
     var { name, email, phone_number, password } = req.body;
   
     if (!email || !name || !password) {
@@ -49,6 +46,4 @@ router.post('/register', async (req, res) => {
       console.error(err);
       res.status(500).json({ error: "INTERNAL_SERVER_ERROR" })
     }
-});
-
-module.exports = router;
+};

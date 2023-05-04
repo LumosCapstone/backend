@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
-
 // POST /api/item/listing/:id endpoint
-router.post('/listing/:id', async (req, res) => {
+export async function listingRoute(req, res) {
   const id = parseInt(req.params.id);
   const user_id = parseInt(req.query.user_id);
   const item_listing = req.query.item_listing;
@@ -71,6 +68,4 @@ router.post('/listing/:id', async (req, res) => {
       message: "Internal Server Error"
     });
   }
-});
-
-module.exports = router;
+};

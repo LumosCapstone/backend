@@ -1,7 +1,4 @@
-const express = require("express");
-const router = express.Router();
-
-router.post('/login', async (req, res) => {
+export async function loginRoute(req, res) {
     try {
       const { email, password } = req.body;
   
@@ -31,6 +28,4 @@ router.post('/login', async (req, res) => {
       console.error(err);
       return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
     }
-});
-
-module.exports = router;
+};

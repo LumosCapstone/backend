@@ -5,6 +5,17 @@ import express from 'express';
 import postgres from 'postgres';
 import jwt from 'jsonwebtoken'
 
+// Route imports
+import { item_list, item_view } from './api/item.js';
+import { reserveRoute } from './api/reservation.js';
+import { confirmRoute } from './api/confirm-reservation.js';
+import { cancelRoute } from './api/cancel-reservation.js';
+import { returnRoute } from './api/return.js';
+import { listingRoute } from './api/listing.js';
+import { userRoute } from './api/user.js';
+import { loginRoute } from './api/login.js';
+import { registerRoute } from './api/register.js'
+
 const bodyParser = require('body-parser')
 const bcrypt = require('bcrypt')
 
@@ -13,17 +24,6 @@ dotenv.config();
 const app = express();
 const port = 3000;
 app.use(express.json())
-
-// Route imports
-const itemRoute = require('./api/item');
-const reserveRoute = require('./api/reservation');
-const confirmRoute = require('./api/confirm-reservation');
-const cancelRoute = require('./api/cancel-reservation');
-const returnRoute = require('./api/return');
-const listingRoute = require('./api/listing');
-const userRoute = require('./api/user');
-const loginRoute = require('./api/login');
-const registerRoute = require('./api/register');
 
 const sql = postgres({
   host: process.env.DB_HOST,
@@ -81,31 +81,34 @@ app.get('/', async (req, res) => {
 });
 
 // GET /api/item endpoint & /api/item/:id endpoint
-app.use('/api/item', itemRoute);
+app.get('/api/item', item_list);
+
+// GET /api/item/:id endpoint
+app.get('/api/item/:id', item_view);
 
 // POST /api/item/reserve/:id endpoint
-app.use('/api/item', reserveRoute);
+app.post('/reserve/:id', reserveRoute);
 
 // POST /api/item/confirm-reservation/:id endpoint
-app.use('/api/item/', confirmRoute);
+app.post('/api/item/confirm-reservation/:id', confirmRoute);
 
 // POST /api/item/cancel-reservation/:id endpoint
-app.use('/api/item', cancelRoute);
+app.post('/api/item/cancel-reservation/:id', cancelRoute);
 
 // POST /api/item/return/:id endpoint
-app.use('/api/item', returnRoute);
+app.post('/api/item/return/:id', returnRoute);
 
 // POST /api/item/listing/:id endpoint
-app.use('/api/item', listingRoute);
+app.post('/api/item/listing/:id', listingRoute);
 
 // GET /api/user/:id endpoint
-app.use('/api', userRoute);
+app.get('/api/user/:id', userRoute);
 
 // POST /api/login endpoint
-app.use('/api', loginRoute);
+app.post('/api/login', loginRoute);
 
 // POST /api/register endpoint
-app.use('/api', registerRoute);
+app.post('/api/register', registerRoute);
 
 // Start the webserver
 app.listen(port, () => {

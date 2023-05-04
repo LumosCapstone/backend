@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
-
 // POST /api/item/reserve/:id endpoint
-router.post('/reserve/:id', async (req, res) => {
+export async function reserveRoute(req, res) {
 
     // Parse query and URL parameters
     const id = parseInt(req.params.id);
@@ -65,6 +62,4 @@ router.post('/reserve/:id', async (req, res) => {
         message: "Internal Server Error"
       });
     }
-  });
-
-module.exports = router;
+ };
