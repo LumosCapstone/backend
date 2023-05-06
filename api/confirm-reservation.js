@@ -1,5 +1,5 @@
 // POST /api/item/confirm-reservation/:id endpoint
-export async function confirmRoute(req, res) {
+export async function confirmRoute(req, res, sql) {
     const id = parseInt(req.params.id);
     const user_id = parseInt(req.query.user_id);
   

@@ -1,5 +1,5 @@
 // POST /api/item/cancel-reservation/:id endpoint
-export async function cancelRoute (req, res) {
+export async function cancelRoute (req, res, sql) {
     const id = parseInt(req.params.id);
     const user_id = parseInt(req.query.user_id);
     let relist = req.query.relist;

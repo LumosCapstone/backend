@@ -1,5 +1,5 @@
 // GET /api/item endpoint
-export async function item_list(req, res) {
+export async function item_list(req, res,sql) {
   // Get query parameters
   const { type, lat, long, max_distance } = req.query;
 
@@ -57,7 +57,7 @@ export async function item_list(req, res) {
 };
 
 // GET /api/item/:id endpoint
-export async function item_view(req, res) {
+export async function item_view(req, res,sql) {
   // Parse item ID
   const id = parseInt(req.params.id);
   if (isNaN(id)) {

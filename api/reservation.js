@@ -1,5 +1,5 @@
 // POST /api/item/reserve/:id endpoint
-export async function reserveRoute(req, res) {
+export async function reserveRoute(req, res,sql) {
 
     // Parse query and URL parameters
     const id = parseInt(req.params.id);

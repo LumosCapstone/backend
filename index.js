@@ -81,34 +81,34 @@ app.get('/', async (req, res) => {
 });
 
 // GET /api/item endpoint & /api/item/:id endpoint
-app.get('/api/item', item_list);
+app.get('/api/item',(req,res) =>  item_list(req,res,sql));
 
 // GET /api/item/:id endpoint
-app.get('/api/item/:id', item_view);
+app.get('/api/item/:id', (req,res) => item_view(req,res,sql));
 
 // POST /api/item/reserve/:id endpoint
-app.post('/reserve/:id', reserveRoute);
+app.post('/reserve/:id', (req,res,sql) => reserveRoute(req,res,sql));
 
 // POST /api/item/confirm-reservation/:id endpoint
-app.post('/api/item/confirm-reservation/:id', confirmRoute);
+app.post('/api/item/confirm-reservation/:id', (req,res,sql) => confirmRoute(req,res,sql));
 
 // POST /api/item/cancel-reservation/:id endpoint
-app.post('/api/item/cancel-reservation/:id', cancelRoute);
+app.post('/api/item/cancel-reservation/:id', (req,res,sql) => cancelRoute(req,res,sql));
 
 // POST /api/item/return/:id endpoint
-app.post('/api/item/return/:id', returnRoute);
+app.post('/api/item/return/:id', (req,res,sql) => returnRoute(req,res,sql));
 
 // POST /api/item/listing/:id endpoint
-app.post('/api/item/listing/:id', listingRoute);
+app.post('/api/item/listing/:id', (req,res,sql) => listingRoute(req,res,sql));
 
 // GET /api/user/:id endpoint
-app.get('/api/user/:id', userRoute);
+app.get('/api/user/:id', (req,res,sql) => userRoute(req,res,sql));
 
 // POST /api/login endpoint
-app.post('/api/login', loginRoute);
+app.post('/api/login', (req,res,sql) => loginRoute(req,res,sql));
 
 // POST /api/register endpoint
-app.post('/api/register', registerRoute);
+app.post('/api/register', (req,res,sql) => registerRoute(req,res,sql));
 
 // Start the webserver
 app.listen(port, () => {

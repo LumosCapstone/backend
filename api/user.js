@@ -1,5 +1,5 @@
 // GET /api/user/:id endpoint
-export async function userRoute(req, res) {
+export async function userRoute(req, res, sql) {
   const user_id = parseInt(req.params.id);
 
   if (isNaN(user_id)) {

@@ -1,5 +1,5 @@
 // POST /api/item/listing/:id endpoint
-export async function listingRoute(req, res) {
+export async function listingRoute(req, res, sql) {
   const id = parseInt(req.params.id);
   const user_id = parseInt(req.query.user_id);
   const item_listing = req.query.item_listing;

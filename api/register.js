@@ -1,4 +1,4 @@
-export async function registerRoute(req, res) {
+export async function registerRoute(req, res, sql) {
     var { name, email, phone_number, password } = req.body;
   
     if (!email || !name || !password) {
