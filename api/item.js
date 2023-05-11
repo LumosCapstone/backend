@@ -1,3 +1,47 @@
+import { RESOURCE_TYPES, API_RETURN_MESSAGES, ITEM } from './constants.js';
+import sql from './sql-postgres.js';
+
+const metersPerMile = 1609.34;
+
+const metersToDistanceApproximation = meters => {
+  if (meters < 2 * metersPerMile) return "< 2 miles"
+  else if (meters < 5 * metersPerMile) return "< 5 miles"
+  else if (meters < 10 * metersPerMile) return "< 10 miles"
+  else if (meters < 15 * metersPerMile) return "< 15 miles"
+  else if (meters < 25 * metersPerMile) return "< 25 miles"
+  else return "> 25 miles"
+}
+
+
+// Gives the distance in meters between the given PostGIS point and selected resources.
+// Example of point: `POINT(-121.2352251 85.22345752)`
+const resources_distance_sql = (point) => sql`ST_DistanceSpheroid(
+  ST_GeomFromText(${point}, 4326), 
+  resources.location, 
+  'SPHEROID["WGS 84",6378137,298.257223563]'
+) as distance_meters`;
+
+// Returns true if a PostGIS point and selected resources geography are within a given distance.  
+const resources_within_range_sql = (point, max_distance, type) => {
+  let resource_rows;
+
+  if (type) {
+    resource_rows = sql`ST_DWithin(
+      ST_GeomFromText(${point}, 4326),
+      resources.location::geography,
+      ${max_distance * metersPerMile})
+      and type = ${type};`
+  }
+  else {
+    resource_rows = sql`ST_DWithin(
+      ST_GeomFromText(${point}, 4326),
+      resources.location::geography,
+      ${max_distance * metersPerMile});`
+  }
+
+  return resource_rows;
+};
+
 // GET /api/item endpoint
 export async function item_list(req, res,sql) {
   // Get query parameters

@@ -1,3 +1,5 @@
+import {API_RETURN_MESSAGES, ITEM } from './constants.js';
+
 // POST /api/item/confirm-reservation/:id endpoint
 export async function confirmRoute(req, res, sql) {
     const id = parseInt(req.params.id);

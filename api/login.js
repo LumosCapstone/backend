@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken';
+
 export async function loginRoute(req, res, sql) {
     try {
       const { email, password } = req.body;

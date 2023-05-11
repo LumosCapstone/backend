@@ -1,3 +1,5 @@
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function registerRoute(req, res, sql) {
     var { name, email, phone_number, password } = req.body;
   

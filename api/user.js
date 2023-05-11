@@ -1,3 +1,5 @@
+import {API_RETURN_MESSAGES, ITEM } from './constants.js';
+
 // GET /api/user/:id endpoint
 export async function userRoute(req, res, sql) {
   const user_id = parseInt(req.params.id);
