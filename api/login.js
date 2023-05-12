@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 export async function loginRoute(req, res, sql) {

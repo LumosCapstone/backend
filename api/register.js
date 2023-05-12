@@ -1,3 +1,5 @@
+import bcrypt from 'bcrypt';
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function registerRoute(req, res, sql) {

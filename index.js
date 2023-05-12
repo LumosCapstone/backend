@@ -14,9 +14,6 @@ import { userRoute } from './api/user.js';
 import { loginRoute } from './api/login.js';
 import { registerRoute } from './api/register.js'
 
-const bodyParser = require('body-parser')
-const bcrypt = require('bcrypt')
-
 const app = express();
 const port = 3000;
 app.use(express.json())
@@ -33,7 +30,7 @@ app.get('/', async (req, res) => {
  app.get('/api/item/:id', (req,res) => item_view(req,res,sql));
 
  // POST /api/item/reserve/:id endpoint
- app.post('/reserve/:id', (req,res) => reserveRoute(req,res,sql));
+ app.post('/api/item/reserve/:id', (req,res) => reserveRoute(req,res,sql));
 
  // POST /api/item/confirm-reservation/:id endpoint
  app.post('/api/item/confirm-reservation/:id', (req,res) => confirmRoute(req,res,sql));
